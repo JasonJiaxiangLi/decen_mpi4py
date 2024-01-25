@@ -2,13 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-Test the decentralized stochastic gradient descent
+Test the decentralized stochastic algorithms
 
-Papers:
-    [1] https://arxiv.org/pdf/1909.02712v2.pdf
-    [2] https://openreview.net/pdf?id=CmI7NqBR4Ua
-    [3] https://ieeexplore.ieee.org/abstract/document/8755807
-
+This is a base algorithm that doesn't do any update
+but carry out all the communications
 """
 
 # Import packages

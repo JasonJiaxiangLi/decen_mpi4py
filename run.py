@@ -36,13 +36,13 @@ def parse_args():
 
     parser.add_argument('--algorithm', type=str, default='dsgt', choices=['dsgd', 'dsgt', 'dasagt', 'dnasa'], 
                         help='The algorithm you want to test.')
-    parser.add_argument('--updates', type=int, default=5000, help='Total number of communication rounds.')
+    parser.add_argument('--updates', type=int, default=5001, help='Total number of communication rounds.')
     parser.add_argument('--lr', type=float, default=1.0, help='Local learning rate.')
     parser.add_argument('--alpha_base', type=float, default=0.3, help='Moving average rate base')
     parser.add_argument('--beta', type=float, default=1.0, help='Beta numerator coefficient.')
     parser.add_argument('--k0', type=int, default=5, help='Step-size term.')
     parser.add_argument('--l1', type=float, default=0.0, help='L-1 Regularizer.')
-    parser.add_argument('--mini_batch', type=int, default=64, help='Mini-batch size.')
+    parser.add_argument('--mini_batch', type=int, default=32, help='Mini-batch size.')
     parser.add_argument('--init_batch', type=int, default=1, help='Initial batch size.')
     parser.add_argument('--comm_pattern', type=str, default='ring', choices=['ring', 'random', 'complete', 'ladder'],
                         help='Communication pattern.')
@@ -197,7 +197,7 @@ for trial in range(args.num_trial):
     # Print training information
     if rank == 0:
         opening_statement = f' {args.algorithm} on {args.data} with {args.model}, trial {trial+1} '
-        print(f"\n{'#' * 60}")
+        print(f"\n{'#' * 75}")
         print('\n' + opening_statement.center(60, ' '))
         print(
             f'[GRAPH INFO] {size} agents | connectivity = {args.comm_pattern} | rho = {torch.sort(torch.linalg.eigvals(mixing_matrix).real)[0][size - 2].item()}')
@@ -210,7 +210,7 @@ for trial in range(args.num_trial):
     # Declare and train!
     method = args.algorithm
     local_params = {'lr': args.lr, 'mini_batch': args.mini_batch, 'report': args.report, 'model': args.model, 'device': args.device,
-                    'step_type': args.step_type, 'l1': args.l1, 'seed': args.init_seed_list[trial], 'data': args.data}
+                    'step_type': args.step_type, 'l1': args.l1, 'seed': args.init_seed_list[trial], 'data': args.data, 'comm_round': args.comm_round}
     solver = solver_dict[method](local_params, mixing_matrix, train_loader)
     algo_time = solver.solve(args.updates, optimality_loader, test_loader)
 

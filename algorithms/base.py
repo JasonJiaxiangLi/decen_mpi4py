@@ -96,6 +96,10 @@ class Base:
             self.alpha_base = local_params['alpha_base']
         else:
             self.alpha_base = 0.3
+        if 'comm_round' in local_params:
+            self.comm_round = local_params['comm_round']
+        else:
+            self.comm_round = 1
 
         if 'model' in local_params:
             self.model_name = local_params["model"]

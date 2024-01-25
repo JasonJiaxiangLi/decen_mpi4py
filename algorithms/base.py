@@ -194,7 +194,6 @@ class Base:
 
     def solve(self, outer_iterations, training_data_full_sample, testing_data):
         '''Solve the global problem'''
-
         # Communicate Y to have first gradient tracking term
         comm.Barrier()
         _ = self.communicate_y_with_neighbors()
@@ -244,11 +243,10 @@ class Base:
 
         # Loop over algorithm updates
         for i in range(outer_iterations):
-
             self.update_learning_rate(i, outer_iterations)
 
             # this is the main update
-            # in Base class this function update nothing
+            # in Base class this function update nothing        
             comp_time, comm_time, pre_comm_weights = self.onestep_update()
 
             # Barrier at the end of update for extreme safety
@@ -343,14 +341,12 @@ class Base:
         return 0.0, 0.0, 0.0
 
     def communicate_y_with_neighbors(self):
-        '''Update the gradient tracking'''
-
+        '''Update the gradient tracking'''   
         # Time the Y communication
         time0 = MPI.Wtime()
 
         # Loop over parameters doing and Isend/Irecv
         for pa in range(self.num_params):
-
             # DEFINE VARIABLE TO SEND
             send_data = self.Y[pa].cpu().detach().numpy()
             recv_data = numpy.empty(shape=((len(self.peers),) + self.Y[pa].shape), dtype=numpy.float32)

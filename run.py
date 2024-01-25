@@ -181,6 +181,7 @@ train_loader, optimality_loader, test_loader = make_dataloader(args)
 # Load communication matrix
 if rank == 0:
     mixing_matrix = create_mix_mat(args.comm_pattern, size)
+    print("mixing matrix:\n", mixing_matrix)
     for i in range(1, size):
         req = comm.isend(mixing_matrix, dest=i, tag=i)
         req.wait()

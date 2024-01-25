@@ -42,8 +42,8 @@ class DSGD(Base):
     using descentralized sthocastic gradient descent
     '''
 
-    def __init__(self):
-        super().__init__()
+    # def __init__(self):
+    #     super().__init__()
 
     def onestep_update(self):
         ##################################################

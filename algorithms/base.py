@@ -27,6 +27,7 @@ from torchvision import datasets, transforms
 # Import custom classes
 from models.mlp import MLP
 from models.lenet import LENET
+from models.resnet import ResNet, resnet18
 from helpers.l1_regularizer import L1
 from helpers.replace_weights import Opt
 from helpers.custom_data_loader import BinaryDataset
@@ -44,12 +45,9 @@ class Base:
     :param: local_params = DICT of parameters for training
     :param: mixing_matrix = NxN torch float containing weights for communication
     :param: training_data = torch.utils.data.Dataloader
-    :param: init_seed
     '''
 
-    def __init__(self, args, mixing_matrix, training_data, init_seed):
-        local_params = {'lr': args.lr, 'mini_batch': args.mini_batch, 'report': args.report,
-                        'step_type': args.step_type, 'l1': args.l1, 'seed': init_seed}
+    def __init__(self, local_params, mixing_matrix, training_data):
         # Get the information about neighbor communication:
         # First, we extract the number of nodes and double check
         # this value is the same as the size of the MPI world
@@ -98,6 +96,7 @@ class Base:
             self.report = local_params['report']
         else:
             self.report = 100
+        self.model_name = local_params["model"]
 
             # Fix stepsize to be constant, IF that is specified
         if self.step_type == 'constant':
@@ -111,16 +110,16 @@ class Base:
         self.data_loader = training_data
 
         # Initialize the models
-        # We either have the MLP or we have LENET
-        if args.data in ['a9a', 'miniboone']:
+        if self.model_name == 'mlp':
+            # right now mlp only support a9a and mininoone
             self.model = MLP(self.data_loader.dataset.data.shape[1], 64, 2).to(self.device)
-
-        elif args.data in ['mnist', 'cifar']:
+        elif self.model_name == 'lenet':
             self.model = LENET(10).to(self.device)
-
+        elif self.model_name == 'resnet':
+            self.model = resnet18(num_classes=10).to(self.device)
         else:
             sys.exit(f"[ERROR] To use a new dataset/architecture, add the dataset to the data folder and incorporate the"
-                     f"model here using \'self.model = <your_model>.to(self.device)\'.")
+                        f"model here using \'self.model = <your_model>.to(self.device)\'.")
 
         # Initialize the updating weights rule and the training loss function
         self.replace_weights = Opt(self.model.parameters(), lr=0.1)

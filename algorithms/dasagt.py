@@ -40,8 +40,8 @@ class DASAGT(Base):
     using descentralized sthocastic averaged gradient tracking
     '''
 
-    def __init__(self):
-        super().__init__()
+    # def __init__(self):
+    #     super().__init__()
 
     def initial_grads(self):
         self.grads = self.get_grads(self.weights)

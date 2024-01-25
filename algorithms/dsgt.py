@@ -42,8 +42,8 @@ class DSGT(Base):
     using descentralized sthocastic gradient tracking
     '''
 
-    def __init__(self):
-        super().__init__()
+    # def __init__(self):
+    #     super().__init__()
 
     def onestep_update(self):
         ##################################################

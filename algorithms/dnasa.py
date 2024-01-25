@@ -31,21 +31,20 @@ comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
-class DASAGT(Base):
+class DNASA(Base):
     '''
     Class for solving decentralized nonconvex consensus problems 
     using descentralized sthocastic normalized averaged gradient tracking
     '''
 
-    def __init__(self):
-        super().__init__()
+    # def __init__(self):
+    #     super().__init__()
 
     def initial_grads(self):
         self.grads = self.get_grads(self.weights)
         
         # Initialize local y, z, u, and previous grads
         self.Y = [self.weights[k].detach() for k in range(self.num_params)]
-        # self.Z = [self.weights[k].detach() for k in range(self.num_params)]
         self.Z = [torch.zeros_like(self.weights[k]) for k in range(self.num_params)]
         self.U = [self.grads[k].detach() for k in range(self.num_params)]
         self.prev_grads = [self.grads[k].detach() for k in range(self.num_params)]

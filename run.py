@@ -5,7 +5,7 @@ import os
 import sys
 import time
 import torch
-import numpy
+import numpy as np
 import math
 from mpi4py import MPI
 from torchvision import datasets, transforms
@@ -17,12 +17,12 @@ from helpers.l1_regularizer import L1
 from helpers.replace_weights import Opt
 from helpers.custom_data_loader import BinaryDataset
 
-from dsgd import DSGD
-from dsgt import DSGT
-from proxdasagt import PROXDASAGT
-from proxndasagt import PROXNDASAGT 
+from algorithms.dsgd import DSGD
+from algorithms.dsgt import DSGT
+from algorithms.dasagt import DASAGT
+from algorithms.dnasa import DNASA
 
-solver_dict = {"dsgd": DSGD, "dsgt": DSGT, "proxdasagt": PROXDASAGT, "proxndasagt": PROXNDASAGT}
+solver_dict = {"dsgd": DSGD, "dsgt": DSGT, "dasagt": DASAGT, "dnasa": DNASA}
 
 # Set up MPI
 comm = MPI.COMM_WORLD
@@ -33,7 +33,7 @@ def parse_args():
     # Parse user input
     parser = argparse.ArgumentParser(description='Testing algorithms on problems from paper.')
 
-    parser.add_argument('--algorithm', type=str, default='dsgt', choices=['dsgd', 'dsgt', 'proxdasagt', 'proxndasagt'], 
+    parser.add_argument('--algorithm', type=str, default='dsgt', choices=['dsgd', 'dsgt', 'dasagt', 'dnasa'], 
                         help='The algorithm you want to test.')
     parser.add_argument('--updates', type=int, default=5000, help='Total number of communication rounds.')
     parser.add_argument('--lr', type=float, default=1.0, help='Local learning rate.')
@@ -48,24 +48,29 @@ def parse_args():
     parser.add_argument('--comm_round', type=int, default=1, help='m')
     parser.add_argument('--data', type=str, default='a9a', choices=['a9a', 'mnist', 'miniboone', 'cifar'],
                         help='Dataset.')
-    parser.add_argument('--nn', type=str, default='mlp', choices=['mlp', 'lenet', 'resnet'],
+    parser.add_argument('--model', type=str, default='mlp', choices=['mlp', 'lenet', 'resnet'],
                         help='Neural network structure.')
     parser.add_argument('--num_trial', type=int, default=1, help='Total number of trials.')
     parser.add_argument('--step_type', type=str, default='diminishing', choices=('constant', 'diminishing'),
                         help='Diminishing or constant step-size.')
     parser.add_argument('--report', type=int, default=100, help='How often to report criteria.')
+    parser.add_argument('--init_seed_list', type=list, default=[], help='How often to report criteria.')
 
     # Create callable argument
     args = parser.parse_args()
-    args = parser.parse_args_into_dataclasses()[0]
     print(args)
     return args
 
 args = parse_args()
+if not args.init_seed_list:
+    args.init_seed_list = [np.random.randint(1000000000) for _ in range(args.num_trial)]
 
-def make_dataloader(args, data_dir, train=True):
-    if args.data == "CIFAR10":
-        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+###############################
+# initializedata
+def make_dataloader(args):
+    if args.data == "cifar":
+        transform = transforms.Compose([transforms.ToTensor(),
+                                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
         # Subset data to local agent
         num_samples = 60000 // size
         train_loader = torch.utils.data.DataLoader(
@@ -86,7 +91,7 @@ def make_dataloader(args, data_dir, train=True):
             datasets.CIFAR10('data', train=False),
             batch_size=num_test, sampler=torch.utils.data.SubsetRandomSampler(
                 [i for i in range(int(rank * num_test), int((rank + 1) * num_test))]))
-    elif args.data == "MNIST":
+    elif args.data == "mnist":
         # Create transform for data
         transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize((0.1307,), (0.3081,))])
@@ -156,18 +161,21 @@ def make_dataloader(args, data_dir, train=True):
             BinaryDataset('data', args.data, train=False),
             batch_size=num_test, sampler=torch.utils.data.SubsetRandomSampler(
                 [i for i in range(int(rank * num_test), int((rank + 1) * num_test))]))
+        
+    return train_loader, optimality_loader, test_loader
 
+train_loader, optimality_loader, test_loader = make_dataloader(args)
 
 for trial in range(args.num_trial):
     # Load communication matrix and initial weights
-    mixing_matrix = torch.tensor(numpy.load(f'mixing_matrices/{args.comm_pattern}_{size}.dat', allow_pickle=True))
+    mixing_matrix = torch.tensor(np.load(f'mixing_matrices/{args.comm_pattern}_{size}.dat', allow_pickle=True))
     arch_size = 4 if args.data in ['a9a', 'miniboone'] else 8
-    if args.data == 'cifar':
-        init_weights = [numpy.load(os.path.join(os.getcwd(), f'init_weights/mnist/trial{trial+1}/rank{rank}/layer{l}.dat'),
-                            allow_pickle=True) for l in range(arch_size)]
-    else:
-        init_weights = [numpy.load(os.path.join(os.getcwd(), f'init_weights/{args.data}/trial{trial+1}/rank{rank}/layer{l}.dat'),
-                            allow_pickle=True) for l in range(arch_size)]
+    # if args.data == 'cifar':
+    #     init_weights = [np.load(os.path.join(os.getcwd(), f'init_weights/mnist/trial{trial+1}/rank{rank}/layer{l}.dat'),
+    #                         allow_pickle=True) for l in range(arch_size)]
+    # else:
+    #     init_weights = [np.load(os.path.join(os.getcwd(), f'init_weights/{args.data}/trial{trial+1}/rank{rank}/layer{l}.dat'),
+    #                         allow_pickle=True) for l in range(arch_size)]
 
     # Print training information
     if rank == 0:
@@ -184,7 +192,9 @@ for trial in range(args.num_trial):
 
     # Declare and train!
     method = args.algorithm
-    solver = solver_dict[method](args, mixing_matrix, train_loader, init_weights)
+    local_params = {'lr': args.lr, 'mini_batch': args.mini_batch, 'report': args.report, 'model': args.model,
+                    'step_type': args.step_type, 'l1': args.l1, 'seed': args.init_seed_list[trial]}
+    solver = solver_dict[method](local_params, mixing_matrix, train_loader)
     algo_time = solver.solve(args.updates, optimality_loader, test_loader)
 
     # Save the information
@@ -203,17 +213,17 @@ for trial in range(args.num_trial):
         pass
     path = os.path.join(os.getcwd(), f'results/plot_results/{args.data}')
 
-    # Save information via numpy
+    # Save information via np
     if rank == 0:
         all_results = [solver.testing_loss, solver.testing_accuracy, solver.training_loss, solver.training_accuracy,\
                     solver.testing_loss_local, solver.testing_accuracy_local, solver.training_loss_local, solver.training_accuracy_local,\
                     solver.total_optimality, solver.consensus_violation, solver.norm_hist, solver.iterate_norm_hist, solver.total_time,\
                     solver.communication_time, solver.compute_time, solver.nnz_at_avg, solver.avg_nnz]
-        all_results = numpy.array(all_results, dtype=object)
+        all_results = np.array(all_results, dtype=object)
         if args.step_type == 'diminishing':
             save_path = f'{path}/{method}_t_{trial+1}_{args.comm_pattern}_{args.mini_batch}_{args.updates}_lr_{args.lr}.npy'
         else:
             save_path = f'{path}/{method}_t_{trial+1}_{args.comm_pattern}_{args.mini_batch}_{args.updates}_lr_{args.lr}_step_{args.step_type}.npy'
-        numpy.save(save_path, all_results)
+        np.save(save_path, all_results)
     # Barrier at end so all agents stop this script before moving on
     comm.Barrier()

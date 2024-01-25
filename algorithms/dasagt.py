@@ -59,11 +59,11 @@ class DASAGT(Base):
         # constant step-sizes
         if self.step_type == 'constant':
             self.alpha = self.alpha_base * math.sqrt(self.num_nodes / outer_iterations)
-            self.lr = self.lr_base * (self.num_nodes)**(1/4) / (outer_iterations) ** (3/4)
+            # self.lr = self.lr_base * min(math.sqrt(self.num_nodes / outer_iterations), 1)
         # Diminishing step-sizes
         else:
-            self.alpha = self.alpha_base * math.sqrt(self.num_nodes / i + 1)
-            self.lr = self.lr_base * (self.num_nodes)**(1/4) / (i + 1) ** (3/4)
+            self.alpha = self.alpha_base * min(math.sqrt(self.num_nodes / (i+1)), 1)
+            # self.lr = self.lr_base * min(math.sqrt(self.num_nodes / (i+1)), 1)
 
     def onestep_update(self):
         time_i = time.time()

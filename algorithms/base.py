@@ -194,13 +194,13 @@ class Base:
 
     def solve(self, outer_iterations, training_data_full_sample, testing_data):
         '''Solve the global problem'''
-        # Communicate Y to have first gradient tracking term
-        comm.Barrier()
-        _ = self.communicate_y_with_neighbors()
-        comm.Barrier()
+        # # Communicate Y to have first gradient tracking term
+        # comm.Barrier()
+        # _ = self.communicate_y_with_neighbors()
+        # comm.Barrier()
 
-        # Barrier
-        comm.Barrier()
+        # # Barrier
+        # comm.Barrier()
 
         ##################################################
         # Save initial errors for fair comparison across methods
@@ -590,7 +590,7 @@ class Base:
             test_loss = recv_array[2] / recv_array[1]
             testing_accuracy = 100 * recv_array[0] / recv_array[1]
 
-        # Compue local information and then average
+        # Compute local information and then average
         elif mode == 'local':
             # PERFORM ALL REDUCE TO HAVE AVERAGE
             correct /= num_test_points

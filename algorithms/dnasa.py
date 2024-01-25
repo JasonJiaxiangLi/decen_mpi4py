@@ -37,9 +37,6 @@ class DNASA(Base):
     using descentralized sthocastic normalized averaged gradient tracking
     '''
 
-    # def __init__(self):
-    #     super().__init__()
-
     def initial_grads(self):
         self.grads = self.get_grads(self.weights)
         
@@ -79,8 +76,9 @@ class DNASA(Base):
         self.grads = self.get_grads(self.weights)
 
         # Update local x via moving average
-        self.weights = [(1 - self.alpha) * self.weights[k].detach().clone() + \
-                                self.alpha * self.Y[k].detach().clone() for k in range(self.num_params)]
+        # self.weights = [(1 - self.alpha) * self.weights[k].detach().clone() + \
+        #                         self.alpha * self.Y[k].detach().clone() for k in range(self.num_params)]
+        self.weights = [self.Y[k].detach().clone() for k in range(self.num_params)]
 
         # Update local z via moving average
         self.Z = [(1 - self.alpha) * self.Z[k].detach().clone() + \

@@ -92,6 +92,10 @@ class Base:
             self.report = local_params['report']
         else:
             self.report = 100
+        if 'alpha_base' in local_params:
+            self.alpha_base = local_params['alpha_base']
+        else:
+            self.alpha_base = 0.3
 
         if 'model' in local_params:
             self.model_name = local_params["model"]

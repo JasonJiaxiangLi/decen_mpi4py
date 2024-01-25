@@ -49,6 +49,19 @@ class DNASA(Base):
         self.U = [self.grads[k].detach() for k in range(self.num_params)]
         self.prev_grads = [self.grads[k].detach() for k in range(self.num_params)]
 
+        self.lr_base = self.lr
+
+    def update_learning_rate(self, i, outer_iterations):
+        """TODO: using learning rate schedulers"""
+        # constant step-sizes
+        if self.step_type == 'constant':
+            self.alpha = self.alpha_base * math.sqrt(self.num_nodes / outer_iterations)
+            self.lr = self.lr_base * (self.num_nodes)**(1/4) / (outer_iterations) ** (3/4)
+        # Diminishing step-sizes
+        else:
+            self.alpha = self.alpha_base * math.sqrt(self.num_nodes / i + 1)
+            self.lr = self.lr_base * (self.num_nodes)**(1/4) / (i + 1) ** (3/4)
+
     def onestep_update(self):
         time_i = time.time()
         ##################################################

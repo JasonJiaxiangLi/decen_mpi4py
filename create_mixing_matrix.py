@@ -1,6 +1,6 @@
 import numpy as np
 
-def create_mix_mat(pattern, n, random_ratio=0.8):
+def create_mix_mat(pattern, n, random_ratio=0.85):
     if pattern == 'complete':
         res = np.ones((n, n)) / n
     elif pattern == 'ring':

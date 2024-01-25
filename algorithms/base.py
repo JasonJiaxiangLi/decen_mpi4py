@@ -5,7 +5,6 @@
 Test the decentralized stochastic algorithms
 
 This is a base algorithm that doesn't do any update
-but carry out all the communications
 """
 
 # Import packages
@@ -62,7 +61,7 @@ class Base:
         ##################################################
         # Parse the training parameters:
         #
-        # model = 'bilinear', 'lenet', or 'fc' for architecture type (STR)
+        # model = 'mlp', 'lenet' or 'resnet'
         # step_type = 'constant' or 'diminishing' for learning rate type (STR)
         # alpha = learning rate (FLOAT)
         # beta = variance reduction term (FLOAT)
@@ -98,7 +97,6 @@ class Base:
             self.model_name = local_params["model"]
         else:
             raise ValueError("must specify a model")
-        
         if 'data' in local_params:
             self.data = local_params["data"]
         else:
@@ -123,17 +121,15 @@ class Base:
             self.model = MLP(self.data_loader.dataset.data.shape[1], 64, 2).to(self.device)
         elif self.model_name == 'lenet':
             if self.data != "mnist":
-                # right now mlp only support a9a and mininoone
                 raise ValueError("LeNet only support MNIST dataset")
             self.model = LENET(10).to(self.device)
         elif self.model_name == 'resnet':
             if self.data != "cifar":
-                # right now mlp only support a9a and mininoone
                 raise ValueError("ResNet only support Cifar dataset")
             self.model = resnet18(num_classes=10).to(self.device)
         else:
-            sys.exit(f"[ERROR] To use a new dataset/architecture, add the dataset to the data folder and incorporate the"
-                        f"model here using \'self.model = <your_model>.to(self.device)\'.")
+            raise ValueError(f"[ERROR] To use a new dataset/architecture, add the dataset to the data folder and incorporate the"
+                             f"model here using \'self.model = <your_model>.to(self.device)\'.")
 
         # Initialize the updating weights rule and the training loss function
         self.replace_weights = Opt(self.model.parameters(), lr=0.1)
@@ -153,7 +149,7 @@ class Base:
         self.num_params = len(self.weights)
 
         # initialize all parameter grads and Y
-        ## modify this function to include all variables you add
+        ## modify this function to include all variables that you add
         self.initial_grads()
 
         # Allocate space for relevant report values: consensus, gradient,
@@ -238,7 +234,7 @@ class Base:
             self.update_learning_rate(i, outer_iterations)
 
             # this is the main update
-            ## Replace this function with the new updates!
+            # in Base class this function update nothing
             comp_time, comm_time, pre_comm_weights = self.onestep_update()
 
             # Barrier at the end of update for extreme safety
@@ -329,7 +325,8 @@ class Base:
             self.lr = self.lr_base / math.pow(i + 1, 1 / 2)
 
     def onestep_update(self):
-        pass
+        # update nothing and return zero as communication times
+        return 0.0, 0.0, 0.0
 
     def communicate_y_with_neighbors(self):
         '''Update the gradient tracking'''

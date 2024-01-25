@@ -17,18 +17,23 @@ from helpers.l1_regularizer import L1
 from helpers.replace_weights import Opt
 from helpers.custom_data_loader import BinaryDataset
 
+###############################
+# ADD NEW algorithm here
+# also need to add in parse_args
 from algorithms.dsgd import DSGD
 from algorithms.dsgt import DSGT
 from algorithms.dasagt import DASAGT
 from algorithms.dnasa import DNASA
-
 solver_dict = {"dsgd": DSGD, "dsgt": DSGT, "dasagt": DASAGT, "dnasa": DNASA}
+###############################
 
 # Set up MPI
 comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
+###############################
+# read all the args
 def parse_args():
     # Parse user input
     parser = argparse.ArgumentParser(description='Testing algorithms on problems from paper.')
@@ -54,7 +59,7 @@ def parse_args():
     parser.add_argument('--step_type', type=str, default='diminishing', choices=('constant', 'diminishing'),
                         help='Diminishing or constant step-size.')
     parser.add_argument('--report', type=int, default=100, help='How often to report criteria.')
-    parser.add_argument('--init_seed_list', type=list, default=[], help='How often to report criteria.')
+    parser.add_argument('--init_seed_list', type=list, default=[], help='The random seed for initializing all parameters.')
 
     # Create callable argument
     args = parser.parse_args()
@@ -64,6 +69,7 @@ def parse_args():
 args = parse_args()
 if not args.init_seed_list:
     args.init_seed_list = [np.random.randint(1000000000) for _ in range(args.num_trial)]
+###############################
 
 ###############################
 # initialize data
@@ -165,17 +171,14 @@ def make_dataloader(args):
     return train_loader, optimality_loader, test_loader
 
 train_loader, optimality_loader, test_loader = make_dataloader(args)
+###############################
 
+###############################
+# start the training
 for trial in range(args.num_trial):
-    # Load communication matrix and initial weights
+    # Load communication matrix
+    # TODO: write a code to generate this matrix for any size
     mixing_matrix = torch.tensor(np.load(f'mixing_matrices/{args.comm_pattern}_{size}.dat', allow_pickle=True))
-    arch_size = 4 if args.data in ['a9a', 'miniboone'] else 8
-    # if args.data == 'cifar':
-    #     init_weights = [np.load(os.path.join(os.getcwd(), f'init_weights/mnist/trial{trial+1}/rank{rank}/layer{l}.dat'),
-    #                         allow_pickle=True) for l in range(arch_size)]
-    # else:
-    #     init_weights = [np.load(os.path.join(os.getcwd(), f'init_weights/{args.data}/trial{trial+1}/rank{rank}/layer{l}.dat'),
-    #                         allow_pickle=True) for l in range(arch_size)]
 
     # Print training information
     if rank == 0:
@@ -227,3 +230,4 @@ for trial in range(args.num_trial):
         np.save(save_path, all_results)
     # Barrier at end so all agents stop this script before moving on
     comm.Barrier()
+###############################

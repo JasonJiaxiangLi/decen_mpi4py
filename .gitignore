@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+# data
+data/cifar*
+data/MNIST*
+
 # Distribution / packaging
 .Python
 build/

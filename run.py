@@ -66,7 +66,7 @@ if not args.init_seed_list:
     args.init_seed_list = [np.random.randint(1000000000) for _ in range(args.num_trial)]
 
 ###############################
-# initializedata
+# initialize data
 def make_dataloader(args):
     if args.data == "cifar":
         transform = transforms.Compose([transforms.ToTensor(),

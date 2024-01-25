@@ -17,7 +17,8 @@ def create_mix_mat(pattern, n, random_ratio=0.8):
                     res[i, idx] = 0.0
                     res[i, i] += 1 / n
     elif pattern == 'ladder':
-        pass
+        # TODO: implement ladder
+        res = np.ones((n, n)) / n
     else:
         raise ValueError("This pattern is not defined")
 

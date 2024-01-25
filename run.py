@@ -179,7 +179,6 @@ train_loader, optimality_loader, test_loader = make_dataloader(args)
 
 ###############################
 # Load communication matrix
-# mixing_matrix = torch.tensor(np.load(f'mixing_matrices/{args.comm_pattern}_{size}.dat', allow_pickle=True))
 if rank == 0:
     mixing_matrix = create_mix_mat(args.comm_pattern, size)
     for i in range(1, size):

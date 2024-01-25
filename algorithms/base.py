@@ -101,6 +101,10 @@ class Base:
             self.data = local_params["data"]
         else:
             raise ValueError("must specify a dataset")
+        if 'device' in local_params:
+            self.device_name = local_params["device"]
+        else:
+            raise ValueError("must specify a device")
 
             # Fix stepsize to be constant, IF that is specified
         if self.step_type == 'constant':
@@ -109,8 +113,10 @@ class Base:
             pass
 
         # Get the CUDA device and save the data loader to be easily reference later
-        # self.device = torch.device(f'cuda:{rank % size}')
-        self.device = torch.device(f'cpu:{rank % size}')
+        if self.device_name == 'cuda':
+            self.device = torch.device(f'cuda:0')
+        else:
+            self.device = torch.device(f'cpu:{rank % size}')
         self.data_loader = training_data
 
         # Initialize the models

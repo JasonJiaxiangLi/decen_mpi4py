@@ -55,6 +55,7 @@ def parse_args():
                         help='Dataset.')
     parser.add_argument('--model', type=str, default='mlp', choices=['mlp', 'lenet', 'resnet'],
                         help='Neural network structure.')
+    parser.add_argument('--device', type=str, default='cpu', choices=['cpu', 'cuda'], help='The device.')
     parser.add_argument('--num_trial', type=int, default=1, help='Total number of trials.')
     parser.add_argument('--step_type', type=str, default='diminishing', choices=('constant', 'diminishing'),
                         help='Diminishing or constant step-size.')
@@ -63,7 +64,9 @@ def parse_args():
 
     # Create callable argument
     args = parser.parse_args()
-    print(args)
+    
+    if rank == 1:
+        print(args)
     return args
 
 args = parse_args()
@@ -78,15 +81,15 @@ def make_dataloader(args):
         transform = transforms.Compose([transforms.ToTensor(),
                                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
         # Subset data to local agent
-        num_samples = 60000 // size
+        num_samples = 50000 // size
         train_loader = torch.utils.data.DataLoader(
-            datasets.CIFAR10('data', train=True, download=True), # ,transform=transform),
+            datasets.CIFAR10('data', train=True, download=True, transform=transform),
             batch_size=args.mini_batch, sampler=torch.utils.data.SubsetRandomSampler(
             [i for i in range(int(rank * num_samples), int((rank + 1) * num_samples))]))
 
         # Load data to be used to compute full gradient with neighbors
         optimality_loader = torch.utils.data.DataLoader(
-            datasets.CIFAR10('data', train=True, download=True),
+            datasets.CIFAR10('data', train=True, download=True, transform=transform),
             batch_size=num_samples, sampler=torch.utils.data.SubsetRandomSampler(
             [i for i in
                 range(int(rank * num_samples), int((rank + 1) * num_samples))]))  # Difference is in number of samples!!
@@ -94,7 +97,7 @@ def make_dataloader(args):
         # Load the testing data
         num_test = 10000 // size
         test_loader = torch.utils.data.DataLoader(
-            datasets.CIFAR10('data', train=False),
+            datasets.CIFAR10('data', train=False, transform=transform),
             batch_size=num_test, sampler=torch.utils.data.SubsetRandomSampler(
                 [i for i in range(int(rank * num_test), int((rank + 1) * num_test))]))
     elif args.data == "mnist":
@@ -195,7 +198,7 @@ for trial in range(args.num_trial):
 
     # Declare and train!
     method = args.algorithm
-    local_params = {'lr': args.lr, 'mini_batch': args.mini_batch, 'report': args.report, 'model': args.model,
+    local_params = {'lr': args.lr, 'mini_batch': args.mini_batch, 'report': args.report, 'model': args.model, 'device': args.device,
                     'step_type': args.step_type, 'l1': args.l1, 'seed': args.init_seed_list[trial], 'data': args.data}
     solver = solver_dict[method](local_params, mixing_matrix, train_loader)
     algo_time = solver.solve(args.updates, optimality_loader, test_loader)

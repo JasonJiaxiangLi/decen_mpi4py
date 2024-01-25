@@ -16,6 +16,7 @@ from models.lenet import LENET
 from helpers.l1_regularizer import L1
 from helpers.replace_weights import Opt
 from helpers.custom_data_loader import BinaryDataset
+from create_mixing_matrix import create_mix_mat
 
 ###############################
 # ADD NEW algorithm here
@@ -26,11 +27,6 @@ from algorithms.dasagt import DASAGT
 from algorithms.dnasa import DNASA
 solver_dict = {"dsgd": DSGD, "dsgt": DSGT, "dasagt": DASAGT, "dnasa": DNASA}
 ###############################
-
-# Set up MPI
-comm = MPI.COMM_WORLD
-size = comm.Get_size()
-rank = comm.Get_rank()
 
 ###############################
 # read all the args
@@ -64,14 +60,19 @@ def parse_args():
 
     # Create callable argument
     args = parser.parse_args()
-    
-    if rank == 1:
-        print(args)
+    # print(args)
     return args
 
 args = parse_args()
 if not args.init_seed_list:
     args.init_seed_list = [np.random.randint(1000000000) for _ in range(args.num_trial)]
+###############################
+
+###############################
+# Set up MPI
+comm = MPI.COMM_WORLD
+size = comm.Get_size()
+rank = comm.Get_rank()
 ###############################
 
 ###############################
@@ -177,17 +178,28 @@ train_loader, optimality_loader, test_loader = make_dataloader(args)
 ###############################
 
 ###############################
-# start the training
-for trial in range(args.num_trial):
-    # Load communication matrix
-    # TODO: write a code to generate this matrix for any size
-    mixing_matrix = torch.tensor(np.load(f'mixing_matrices/{args.comm_pattern}_{size}.dat', allow_pickle=True))
+# Load communication matrix
+# mixing_matrix = torch.tensor(np.load(f'mixing_matrices/{args.comm_pattern}_{size}.dat', allow_pickle=True))
+if rank == 0:
+    mixing_matrix = create_mix_mat(args.comm_pattern, size)
+    for i in range(1, size):
+        req = comm.isend(mixing_matrix, dest=i, tag=i)
+        req.wait()
+else:
+    req = comm.irecv(source=0, tag=rank)
+    mixing_matrix = req.wait()
 
+mixing_matrix = torch.tensor(mixing_matrix)
+###############################
+
+###############################
+# start the training!
+for trial in range(args.num_trial):
     # Print training information
     if rank == 0:
-        opening_statement = f' {args.algorithm} on {args.data}, trial {trial+1} '
-        print(f"\n{'#' * 75}")
-        print('\n' + opening_statement.center(75, ' '))
+        opening_statement = f' {args.algorithm} on {args.data} with {args.model}, trial {trial+1} '
+        print(f"\n{'#' * 60}")
+        print('\n' + opening_statement.center(60, ' '))
         print(
             f'[GRAPH INFO] {size} agents | connectivity = {args.comm_pattern} | rho = {torch.sort(torch.linalg.eigvals(mixing_matrix).real)[0][size - 2].item()}')
         print(f'[TRAINING INFO] mini-batch = {args.mini_batch} | learning rate = {args.lr}\n')

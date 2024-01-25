@@ -193,7 +193,7 @@ for trial in range(args.num_trial):
     # Declare and train!
     method = args.algorithm
     local_params = {'lr': args.lr, 'mini_batch': args.mini_batch, 'report': args.report, 'model': args.model,
-                    'step_type': args.step_type, 'l1': args.l1, 'seed': args.init_seed_list[trial]}
+                    'step_type': args.step_type, 'l1': args.l1, 'seed': args.init_seed_list[trial], 'data': args.data}
     solver = solver_dict[method](local_params, mixing_matrix, train_loader)
     algo_time = solver.solve(args.updates, optimality_loader, test_loader)
 
@@ -204,14 +204,14 @@ for trial in range(args.num_trial):
     except:
         pass
     try:
-        os.mkdir(os.path.join(os.getcwd(), f'results/plot_results'))
+        os.mkdir(os.path.join(os.getcwd(), f'results/'))
     except:
         pass
     try:
-        os.mkdir(os.path.join(os.getcwd(), f'results/plot_results/{args.data}'))
+        os.mkdir(os.path.join(os.getcwd(), f'results/{args.data}'))
     except:
         pass
-    path = os.path.join(os.getcwd(), f'results/plot_results/{args.data}')
+    path = os.path.join(os.getcwd(), f'results/{args.data}')
 
     # Save information via np
     if rank == 0:

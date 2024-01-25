@@ -93,7 +93,16 @@ class Base:
             self.report = local_params['report']
         else:
             self.report = 100
-        self.model_name = local_params["model"]
+
+        if 'model' in local_params:
+            self.model_name = local_params["model"]
+        else:
+            raise ValueError("must specify a model")
+        
+        if 'data' in local_params:
+            self.data = local_params["data"]
+        else:
+            raise ValueError("must specify a dataset")
 
             # Fix stepsize to be constant, IF that is specified
         if self.step_type == 'constant':
@@ -108,11 +117,19 @@ class Base:
 
         # Initialize the models
         if self.model_name == 'mlp':
-            # right now mlp only support a9a and mininoone
+            if self.data not in ["a9a", "minibonne"]:
+                # right now mlp only support a9a and mininoone
+                raise ValueError("MLP only support a9a and miniboone datasets")
             self.model = MLP(self.data_loader.dataset.data.shape[1], 64, 2).to(self.device)
         elif self.model_name == 'lenet':
+            if self.data != "mnist":
+                # right now mlp only support a9a and mininoone
+                raise ValueError("LeNet only support MNIST dataset")
             self.model = LENET(10).to(self.device)
         elif self.model_name == 'resnet':
+            if self.data != "cifar":
+                # right now mlp only support a9a and mininoone
+                raise ValueError("ResNet only support Cifar dataset")
             self.model = resnet18(num_classes=10).to(self.device)
         else:
             sys.exit(f"[ERROR] To use a new dataset/architecture, add the dataset to the data folder and incorporate the"

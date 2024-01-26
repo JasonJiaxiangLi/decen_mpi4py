@@ -54,7 +54,7 @@ class DNASA(Base):
             self.lr = self.lr_base * (self.num_nodes)**(1/4) / (outer_iterations) ** (3/4)
         # Diminishing step-sizes
         else:
-            self.alpha = self.alpha_base * math.sqrt(self.num_nodes / i + 1)
+            self.alpha = self.alpha_base * math.sqrt(self.num_nodes / (i + 1))
             self.lr = self.lr_base * (self.num_nodes)**(1/4) / (i + 1) ** (3/4)
 
     def onestep_update(self):

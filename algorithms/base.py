@@ -134,9 +134,13 @@ class Base:
                 raise ValueError("MLP only support a9a and miniboone datasets")
             self.model = MLP(self.data_loader.dataset.data.shape[1], 64, 2).to(self.device)
         elif self.model_name == 'lenet':
-            if self.data != "mnist":
-                raise ValueError("LeNet only support MNIST dataset")
-            self.model = LENET(10).to(self.device)
+            if self.data not in ["mnist", "cifar"]:
+                raise ValueError("LeNet only support MNIST and Cifar10 datasets")
+            
+            if self.data == "mnist":
+                self.model = LENET(10).to(self.device)
+            else:
+                self.model = LENET(10, 3).to(self.device)
         elif self.model_name == 'resnet':
             if self.data != "cifar":
                 raise ValueError("ResNet only support Cifar dataset")

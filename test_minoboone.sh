@@ -1,0 +1,9 @@
+mpirun -np 8 python run.py --data='miniboone' --model='mlp' --updates=1001 --report=100 --comm_pattern='ring' --init_batch=1 --mini_batch=32 --step_type='constant' --k0=3 --beta=0.0228 --lr=1.0 --num_trial=1 --algorithm='dsgd' --device="cuda"
+mpirun -np 8 python run.py --data='miniboone' --model='mlp' --updates=1001 --report=100 --comm_pattern='ring' --init_batch=1 --mini_batch=32 --step_type='constant' --k0=3 --beta=0.0228 --lr=1.0 --num_trial=1 --algorithm='dsgt' --device="cuda"
+mpirun -np 8 python run.py --data='miniboone' --model='mlp' --updates=1001 --report=100 --comm_pattern='ring' --init_batch=1 --mini_batch=32 --step_type='constant' --k0=3 --beta=0.0228 --lr=1.0 --num_trial=1 --algorithm='dasagt' --device="cuda"
+mpirun -np 8 python run.py --data='miniboone' --model='mlp' --updates=1001 --report=100 --comm_pattern='ring' --init_batch=1 --mini_batch=32 --step_type='constant' --k0=3 --beta=0.0228 --lr=1.0 --num_trial=1 --algorithm='dnasa' --device="cuda"
+
+mpirun -np 8 python run.py --data='miniboone' --model='mlp' --updates=1001 --report=100 --comm_pattern='ring' --init_batch=1 --mini_batch=32 --step_type='constant' --k0=3 --beta=0.0228 --lr=10.0 --num_trial=1 --algorithm='dsgd' --device="cuda"
+mpirun -np 8 python run.py --data='miniboone' --model='mlp' --updates=1001 --report=100 --comm_pattern='ring' --init_batch=1 --mini_batch=32 --step_type='constant' --k0=3 --beta=0.0228 --lr=10.0 --num_trial=1 --algorithm='dsgt' --device="cuda"
+mpirun -np 8 python run.py --data='miniboone' --model='mlp' --updates=1001 --report=100 --comm_pattern='ring' --init_batch=1 --mini_batch=32 --step_type='constant' --k0=3 --beta=0.0228 --lr=10.0 --num_trial=1 --algorithm='dasagt' --device="cuda"
+mpirun -np 8 python run.py --data='miniboone' --model='mlp' --updates=1001 --report=100 --comm_pattern='ring' --init_batch=1 --mini_batch=32 --step_type='constant' --k0=3 --beta=0.0228 --lr=10.0 --num_trial=1 --algorithm='dnasa' --device="cuda"

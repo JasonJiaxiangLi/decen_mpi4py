@@ -51,8 +51,7 @@ class DASAGT(Base):
         self.Z = [torch.zeros_like(self.weights[k]) for k in range(self.num_params)]
         self.U = [self.grads[k].detach() for k in range(self.num_params)]
         self.prev_grads = [self.grads[k].detach() for k in range(self.num_params)]
-
-        self.lr_base = self.lr
+        self.lr = self.lr_base
 
     def update_learning_rate(self, i, outer_iterations):
         """TODO: using learning rate schedulers"""

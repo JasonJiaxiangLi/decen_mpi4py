@@ -103,8 +103,8 @@ def make_dataloader(args):
                 [i for i in range(int(rank * num_test), int((rank + 1) * num_test))]))
     elif args.data == "mnist":
         # Create transform for data
-        transform = transforms.Compose([transforms.ToTensor(),
-                                    transforms.Normalize((0.1307,), (0.3081,))])
+        # correct normalize: transforms.Normalize((-10,), (0.05,))
+        transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]) 
 
         # Subset data to local agent
         num_samples = 60000 // size
@@ -238,9 +238,9 @@ for trial in range(args.num_trial):
                     solver.communication_time, solver.compute_time, solver.nnz_at_avg, solver.avg_nnz]
         all_results = np.array(all_results, dtype=object)
         if args.step_type == 'diminishing':
-            save_path = f'{path}/{method}_t_{trial+1}_{args.comm_pattern}_{args.mini_batch}_{args.updates}_lr_{args.lr}.npy'
+            save_path = f'{path}/{method}_{args.model}_t_{trial+1}_{args.comm_pattern}_{args.mini_batch}_{args.updates}_lr_{args.lr}.npy'
         else:
-            save_path = f'{path}/{method}_t_{trial+1}_{args.comm_pattern}_{args.mini_batch}_{args.updates}_lr_{args.lr}_step_{args.step_type}.npy'
+            save_path = f'{path}/{method}_{args.model}_t_{trial+1}_{args.comm_pattern}_{args.mini_batch}_{args.updates}_lr_{args.lr}_step_{args.step_type}.npy'
         np.save(save_path, all_results)
     # Barrier at end so all agents stop this script before moving on
     comm.Barrier()

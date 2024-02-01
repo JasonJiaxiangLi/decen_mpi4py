@@ -1,3 +1,7 @@
+###############################
+# This is the main code for testing all algorithms
+###############################
+
 # Import packages
 from __future__ import print_function
 import argparse

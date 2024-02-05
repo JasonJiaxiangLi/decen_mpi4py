@@ -23,4 +23,4 @@ mpirun -np 8 python run.py --data='mnist' --model='lenet' --updates=10001 --repo
 ```
 
 ## About results and plots
-The ``results" folder contains all the experiment results for plotting, and the Jupyter notebooks beginning with "plots" . Note: we plot before we name all the algorithms, so the names are not very consistent with the paper.
+The "results" folder contains all the experiment results for plotting, and the Jupyter notebooks beginning with "plots" . Note: we plot before we name all the algorithms, so the names are not very consistent.

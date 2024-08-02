@@ -248,7 +248,7 @@ def dnasa(dimension, num_of_nodes, total_iteration, beta, x_init, network_topolo
 
     for k in range(total_iteration):
         if step_type == "diminishing":
-            alpha, gamma = min(1, math.sqrt(num_of_nodes/(k + 1))), gamma0 * num_of_nodes**(1/4) / (k + 1)**(3/4)
+            alpha, gamma = min(1, math.sqrt(num_of_nodes/(k + 1))), min(1, gamma0 * num_of_nodes**(1/4) / (k + 1)**(3/4))
         # local update
         for i in range(num_of_nodes):
             temp = torch.linalg.norm(Z[i])

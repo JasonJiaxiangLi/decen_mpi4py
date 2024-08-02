@@ -98,10 +98,7 @@ def main(d=100, node_num_list=[5,10,20], seed=1, topo='ring', mode="constant"):
         a, K, lam = 0, 10000, 0
         batch_size = 1 
         # alpha, lam, gamma = math.sqrt(num_of_nodes/K), a, 0.001
-        if mode == "constant":
-            alpha, gamma = math.sqrt(num_of_nodes/K), num_of_nodes**(1/4) / K**(3/4)
-        elif mode == "diminishing":
-            alpha, gamma = min(math.sqrt(num_of_nodes / (k + 1)), 1), (num_of_nodes) ** (0.25) / ((k+1) ** (0.75))
+        gamma = 0.001
             
         # initialization
         X, Z = torch.ones(size=(num_of_nodes, dimension)) * x_init, \
@@ -119,6 +116,11 @@ def main(d=100, node_num_list=[5,10,20], seed=1, topo='ring', mode="constant"):
         Wm = comm_mat(network_topology, multi_round, num_of_nodes)
 
         for k in range(K):
+            if mode == "constant":
+                alpha, gamma = math.sqrt(num_of_nodes/K), num_of_nodes**(1/4) / K**(3/4)
+            elif mode == "diminishing":
+                alpha, gamma = min(math.sqrt(num_of_nodes / (k + 1)), 1), min((num_of_nodes) ** (0.25) / ((k+1) ** (0.75)), 1)
+                
             # local update
             for i in range(num_of_nodes):
                 temp = torch.linalg.norm(Z[i])
@@ -150,7 +152,7 @@ def main(d=100, node_num_list=[5,10,20], seed=1, topo='ring', mode="constant"):
 
 if __name__=="__main__":
     node_num_list = [5,10,20,30]
-    mode = "constant"
+    mode = "diminishing"
     loss_list, gm_list = main(d=100, node_num_list=node_num_list)
     
     fig, ax = plt.subplots(figsize=(6, 4), tight_layout=True)
